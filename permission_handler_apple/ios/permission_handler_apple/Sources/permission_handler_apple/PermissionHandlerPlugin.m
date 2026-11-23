@@ -16,6 +16,37 @@
 }
 
 + (void)registerWithRegistrar:(NSObject <FlutterPluginRegistrar> *)registrar {
+    // Log when the macros pinned in Package.swift differ from the app's Info.plist.
+#ifndef PERMISSION_LOCATION_WHENINUSE
+#define PERMISSION_LOCATION_WHENINUSE 0
+#endif
+#define PH_MACRO(m) @[@#m, @(m)]
+    NSDictionary<NSString *, NSArray *> *macros = @{
+        @"NSCalendarsUsageDescription": PH_MACRO(PERMISSION_EVENTS),
+        @"NSCalendarsFullAccessUsageDescription": PH_MACRO(PERMISSION_EVENTS_FULL_ACCESS),
+        @"NSRemindersUsageDescription": PH_MACRO(PERMISSION_REMINDERS),
+        @"NSContactsUsageDescription": PH_MACRO(PERMISSION_CONTACTS),
+        @"NSCameraUsageDescription": PH_MACRO(PERMISSION_CAMERA),
+        @"NSMicrophoneUsageDescription": PH_MACRO(PERMISSION_MICROPHONE),
+        @"NSSpeechRecognitionUsageDescription": PH_MACRO(PERMISSION_SPEECH_RECOGNIZER),
+        @"NSPhotoLibraryUsageDescription": PH_MACRO(PERMISSION_PHOTOS),
+        @"NSLocationAlwaysAndWhenInUseUsageDescription": PH_MACRO(PERMISSION_LOCATION),
+        @"NSLocationWhenInUseUsageDescription": PH_MACRO(PERMISSION_LOCATION_WHENINUSE),
+        @"NSAppleMusicUsageDescription": PH_MACRO(PERMISSION_MEDIA_LIBRARY),
+        @"NSMotionUsageDescription": PH_MACRO(PERMISSION_SENSORS),
+        @"NSBluetoothAlwaysUsageDescription": PH_MACRO(PERMISSION_BLUETOOTH),
+        @"NSUserTrackingUsageDescription": PH_MACRO(PERMISSION_APP_TRACKING_TRANSPARENCY),
+        @"NSSiriUsageDescription": PH_MACRO(PERMISSION_ASSISTANT),
+    };
+#undef PH_MACRO
+    [macros enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSArray *macro, BOOL *stop) {
+        BOOL declared = [[NSBundle mainBundle] objectForInfoDictionaryKey:key] != nil;
+        if (declared != [macro[1] boolValue]) {
+            NSLog(@"[permission_handler_apple] warning: Info.plist %@ %@, but %@=%@ in Package.swift.",
+                  declared ? @"declares" : @"lacks", key, macro[0], macro[1]);
+        }
+    }];
+
     FlutterMethodChannel *channel = [FlutterMethodChannel
                                      methodChannelWithName:@"flutter.baseflow.com/permissions/methods"
                                      binaryMessenger:[registrar messenger]];

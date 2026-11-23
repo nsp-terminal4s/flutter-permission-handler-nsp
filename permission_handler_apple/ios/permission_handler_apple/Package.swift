@@ -603,7 +603,18 @@ func mergeInfoPlists(_ candidates: [URL], warnOnDivergence: Bool) -> [String: An
     return merged
 }
 
-let infoPlist = findInfoPlist()
+// Pin the app's usage description keys so Xcode.app builds, which cannot locate
+// the app, compile the same permissions. Keep in sync with the app's Info.plist.
+let infoPlist: [String: Any] = Dictionary(uniqueKeysWithValues: [
+    "NSCalendarsUsageDescription",
+    "NSCameraUsageDescription",
+    "NSContactsUsageDescription",
+    "NSLocationAlwaysAndWhenInUseUsageDescription",
+    "NSLocationWhenInUseUsageDescription",
+    "NSMicrophoneUsageDescription",
+    "NSPhotoLibraryUsageDescription",
+    "NSSpeechRecognitionUsageDescription",
+].map { ($0, true) })
 
 /// Every macro this manifest resolved, for PERMISSION_HANDLER_VERBOSE.
 var resolvedMacros: [String: String] = [:]
